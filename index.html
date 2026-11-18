@@ -1,6 +1,6 @@
 <!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>دفتر خرید و تسویه کارخانه</title><style>
 :root{font-family:Calibri,"Segoe UI",Tahoma,sans-serif;font-size:17px;color:#1b2b43;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}header{background:#143355;color:white;padding:22px 4%}h1{margin:0;font-size:1.6rem}h2{font-size:1.25rem;margin:0 0 16px}main{max-width:1450px;margin:auto;padding:20px}section{background:white;border:1px solid #dce4ed;border-radius:14px;padding:20px;margin:16px 0;box-shadow:0 2px 8px #172d4510}label{display:block;font-weight:600;font-size:.95rem;margin-bottom:5px}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:10px;border:1px solid #b9c8d8;border-radius:8px;background:white;min-width:0}input:focus,select:focus{outline:2px solid #7ea8df}button{background:#155e98;color:white;border:0;border-radius:8px;padding:10px 14px;cursor:pointer}button.alt{background:#e8eff8;color:#18466e}button.danger{background:#a93439}button:disabled{opacity:.5}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px}.actions{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:1150px}th,td{border-bottom:1px solid #e4eaf1;padding:8px;text-align:right;vertical-align:middle}th{background:#eaf1f9;font-size:.9rem}td input{min-width:85px}td .name{min-width:180px}.muted{color:#596e81;font-size:.92rem}.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.tile{padding:13px;background:#f0f5fb;border-radius:10px}.tile strong{display:block;font-size:1.2rem;margin-top:5px}.warn{background:#fff2dc;border:1px solid #f1c77e;padding:12px;border-radius:9px}.good{color:#087648}.bad{color:#b52b30}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row input[type=checkbox]{width:auto}.small{font-size:.85rem}nav{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}nav a{color:white;text-decoration:none;border:1px solid #7a9ab7;padding:7px;border-radius:7px}#notice{position:sticky;top:0;background:#e4f5ec;color:#175735;padding:8px 4%;z-index:4}.attachment{display:inline-flex;margin:3px;padding:6px;background:#e7f0fc;border-radius:6px}details{margin:10px 0}summary{cursor:pointer;font-weight:bold}@media print{button,nav,.no-print,#notice{display:none!important}section{break-inside:avoid;box-shadow:none}body{background:white}main{padding:0}}@media(max-width:600px){main{padding:8px}section{padding:12px}:root{font-size:18px}}
-</style></head><body><header><h1>دفتر خرید، اشانتیون و تسویه کارخانه</h1><p>نسخه ۶ | مستقل از اشتراک ChatGPT | واحد مبالغ: تومان</p><nav><button type="button" onclick="checkForUpdates()">بررسی بروزرسانی</button><a href="#invoice">فاکتور</a><a href="#payments">پرداخت‌ها</a><a href="#checks">چک‌ها</a><a href="#history">سوابق</a><a href="#ledger">حساب طرف مقابل</a><a href="#backup">پشتیبان</a></nav></header><div id="notice">در حال آماده‌سازی…</div><main>
+</style></head><body><header><h1>دفتر خرید، اشانتیون و تسویه کارخانه</h1><p>نسخه ۷ | مستقل از اشتراک ChatGPT | واحد مبالغ: تومان</p><nav><button type="button" onclick="checkForUpdates()">بررسی بروزرسانی</button><a href="#invoice">فاکتور</a><a href="#payments">پرداخت‌ها</a><a href="#checks">چک‌ها</a><a href="#history">سوابق</a><a href="#ledger">حساب طرف مقابل</a><a href="#backup">پشتیبان</a></nav></header><div id="notice">در حال آماده‌سازی…</div><main>
 <section id="invoice"><h2>ثبت / ویرایش فاکتور خرید</h2><div class="actions"><button onclick="newInvoice()">فاکتور جدید</button><button onclick="saveInvoice(true)">ثبت قطعی فاکتور</button><span id="draftStatus" class="muted"></span></div><div class="grid">
 <div><label>نام کارخانه / فروشنده</label><input id="factory" list="factories" placeholder="نام دقیق طرف حساب"><datalist id="factories"></datalist></div>
 <div><label>شماره فاکتور</label><input id="invoiceNo"></div><div><label>تاریخ فاکتور (شمسی)</label><input id="date" placeholder="۱۴۰۵/۰۸/۲۱"></div>
@@ -99,33 +99,20 @@ async function backup(){try{await autoSave();let attachments={};for(let key of a
 async function restore(ev){let file=ev.target.files[0];if(!file)return;try{let d=JSON.parse(await file.text());if(!Array.isArray(d.invoices)||!Array.isArray(d.payments))throw Error('ساختار نامعتبر');if(!confirm('بازیابی، اطلاعات فعلی را جایگزین می‌کند. ادامه می‌دهید؟'))return;invoices=d.invoices;payments=d.payments;checks=Array.isArray(d.checks)?d.checks:[];await saveState();for(let [key,a] of Object.entries(d.attachments||{})){let list=a.map(f=>{let bin=atob(f.base64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return {name:f.name,size:f.size,type:f.type,blob:new Blob([u],{type:f.type})}});await put('attachments',key,list)}await newInvoice();renderAll();alert('بازیابی انجام شد.')}catch(e){alert('بازیابی ناموفق: '+e.message)}finally{ev.target.value=''}}
 async function migrate(){let old=localStorage.getItem('factory_purchase_v1');if(!old)return;try{let a=JSON.parse(old),p=JSON.parse(localStorage.getItem('factory_payments_v2')||'[]');if(!Array.isArray(a))return;invoices=a.map(x=>({...x,term:x.term??14,vat:x.vat??0,freightMode:x.freightToFactory==='yes'?'factory':'info',rows:(x.rows||[]).map(r=>({...r,actualBonus:r.actualBonus??'',waste:r.waste??0}))}));payments=p.map(x=>({id:x.id||uid(),payFactory:x.factory,payDate:x.date,payTime:x.time,payAmount:x.amount,payMethod:x.method,payStatus:x.status,payInvoice:x.invoiceId,sourceBank:x.sourceBank,sourceAccount:x.sourceAccount,sender:x.sender,destBank:x.destBank,destAccount:x.destAccount,receiver:x.receiver,reference:x.reference,docNo:x.docNo,payNotes:x.notes}));await saveState();alert('اطلاعات نسخه قبلی از این مرورگر به نسخه جدید منتقل شد. لطفاً پشتیبان بگیرید.')}catch(e){console.error('migration',e)}}
 
-const APP_VERSION='6.0.0';
+const APP_VERSION='7.0.0';
 const UPDATE_BASE='https://raw.githubusercontent.com/darrudi07-gif/factory-purchase-updates/main/';
-async function checkForUpdates(){
-  const btn=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('بررسی بروزرسانی'));
-  if(btn){btn.disabled=true;btn.textContent='در حال بررسی…'}
-  try{
-    const res=await fetch(UPDATE_BASE+'version.json?ts='+Date.now(),{cache:'no-store'});
-    if(!res.ok) throw new Error('فایل نسخه در مخزن پیدا نشد.');
-    const info=await res.json();
-    const remote=String(info.version||'0');
-    if(remote===APP_VERSION || compareVersions(remote,APP_VERSION)<=0){
-      alert('نرم‌افزار شما به‌روز است. نسخه فعلی: '+APP_VERSION);
-      return;
-    }
-    if(!confirm('نسخه جدید '+remote+' آماده است.\\n'+(info.notes||'بهبودها و اصلاحات نرم‌افزار')+'\\n\\nابتدا از اطلاعات پشتیبان بگیرید. فایل جدید دانلود شود؟')) return;
-    const file=await fetch(UPDATE_BASE+(info.file||'index.html'),{cache:'no-store'});
-    if(!file.ok) throw new Error('دریافت فایل بروزرسانی ناموفق بود.');
-    const blob=await file.blob();
-    const a=document.createElement('a'),url=URL.createObjectURL(blob);
-    a.href=url;a.download='factory_purchase_'+remote.replace(/[^0-9.]/g,'_')+'.html';
-    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-    alert('فایل نسخه جدید دانلود شد. برای جلوگیری از حذف داده‌ها، قبل از جایگزینی فایل فعلی، پشتیبان کامل بگیرید و فایل جدید را در همان پوشه نگه دارید. مرورگر اجازه جایگزینی خودکار فایل فعلی را نمی‌دهد.');
-  }catch(e){alert('بررسی بروزرسانی انجام نشد: '+e.message+'\\nاتصال اینترنت و وجود version.json در مخزن را بررسی کنید.')}
-  finally{if(btn){btn.disabled=false;btn.textContent='بررسی بروزرسانی'}}
+function checkForUpdates(){
+  if(window.desktopUpdater){window.desktopUpdater.check();return}
+  alert('برای بروزرسانی خودکار، نسخه نصبی ویندوز را اجرا کنید.');
 }
 function compareVersions(a,b){const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<Math.max(x.length,y.length);i++){let d=(x[i]||0)-(y[i]||0);if(d)return d}return 0}
 
 async function init(){try{db=await openDB();let s=await get('data','state');if(s){invoices=s.invoices||[];payments=s.payments||[];checks=s.checks||[]}else await migrate();loaded=true;await newInvoice();resetPayment();resetCheck();renderAll();$('notice').textContent='آماده | ذخیره خودکار فعال | اطلاعات در پایگاه داده محلی این مرورگر';if(navigator.storage?.estimate){let q=await navigator.storage.estimate();$('storageInfo').textContent='فضای استفاده‌شده مرورگر: حدود '+F((q.usage||0)/1048576)+' مگابایت؛ سقف تقریبی: '+F((q.quota||0)/1048576)+' مگابایت.'}if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{})}catch(e){$('notice').textContent='خطا در راه‌اندازی ذخیره‌سازی: '+e.message;alert('مرورگر امکان پایگاه داده محلی را فراهم نکرده است. فایل را در Chrome یا Edge باز کنید.')}}
 $('rows').addEventListener('input',e=>{let id=e.target.dataset.row,k=e.target.dataset.k;if(!id)return;let r=rows.find(x=>x.id===id);if(!r)return;r[k]=e.target.value;calc();markDirty()});for(let k of fields)$(k).addEventListener('input',()=>{calc();markDirty()});$('search').addEventListener('input',renderHistory);$('payFactory').addEventListener('input',refreshOptions);$('checkFactory').addEventListener('input',refreshOptions);window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});init();
+</script><script>
+if(window.desktopUpdater){
+ window.desktopUpdater.onStatus((m)=>{
+  const el=document.getElementById('notice');if(el)el.textContent='بروزرسانی: '+m;
+ });
+}
 </script></body></html>
